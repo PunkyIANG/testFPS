@@ -10,9 +10,12 @@ public class PlayerMovement : MonoBehaviour
     public float speed = 10f;
     public float mouseSensitivityX = 10f;
     public float mouseSensitivityY = 10f;
+    Vector3 previousMousePosition;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
+        //Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void FixedUpdate()
@@ -21,9 +24,22 @@ public class PlayerMovement : MonoBehaviour
         moveDirection = transform.TransformDirection(moveDirection);                                        //localspace -> worldspace
         rigidbody.MovePosition(transform.position + moveDirection * speed * Time.fixedDeltaTime);           //applying movement
 
-        var rotX = Input.GetAxis("Mouse X") * Time.fixedDeltaTime * mouseSensitivityX;
-        var rotY = Input.GetAxis("Mouse Y") * Time.fixedDeltaTime * mouseSensitivityY;
+        var rotX = - (previousMousePosition - Input.mousePosition).x * Time.fixedDeltaTime * mouseSensitivityX;
+        var rotY = (previousMousePosition - Input.mousePosition).y * Time.fixedDeltaTime * mouseSensitivityY;
 
+        rigidbody.MoveRotation(rigidbody.rotation * Quaternion.Euler(0f, rotX, 0f));
+
+        previousMousePosition = Input.mousePosition;
+        if (Camera.main.transform.rotation.eulerAngles.x + rotY > 90f) { //fix clamp at 0 degrees
+            rotY = 90f - Camera.main.transform.rotation.eulerAngles.x;
+            print("clamp at 90");
+        }
+        /* else if (Camera.main.transform.rotation.eulerAngles.x + rotY < -90f){
+            rotY = - 90f + Camera.main.transform.rotation.eulerAngles.x;
+            print("clamp at -90");
+            } */
         
+
+        Camera.main.transform.rotation *= Quaternion.Euler(rotY, 0f, 0f);
     }
 }
