@@ -10,36 +10,52 @@ public class PlayerMovement : MonoBehaviour
     public float speed = 10f;
     public float mouseSensitivityX = 10f;
     public float mouseSensitivityY = 10f;
+    public float maxCameraXAngle = 90f;
+    public bool invertY = false;
     Vector3 previousMousePosition;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
         //Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
-    void FixedUpdate()
-    {
+    void Update() {     //we're handling input in update for better gameplay feel
+        CharMovement();
+        CameraRotation();
+    }
+
+    void CharMovement() {
         var moveDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));  //getting the input
         moveDirection = transform.TransformDirection(moveDirection);                                        //localspace -> worldspace
-        rigidbody.MovePosition(transform.position + moveDirection * speed * Time.fixedDeltaTime);           //applying movement
+        rigidbody.MovePosition(transform.position + moveDirection * speed * Time.deltaTime);           //applying movement
+    }
+    void CameraRotation() {
+        var rotX = (Input.mousePosition - previousMousePosition).x * Time.deltaTime * mouseSensitivityX;
+        var rotY = - (Input.mousePosition - previousMousePosition).y * Time.deltaTime * mouseSensitivityY;
 
-        var rotX = - (previousMousePosition - Input.mousePosition).x * Time.fixedDeltaTime * mouseSensitivityX;
-        var rotY = (previousMousePosition - Input.mousePosition).y * Time.fixedDeltaTime * mouseSensitivityY;
+        if (invertY)
+            rotY *= -1;
 
         rigidbody.MoveRotation(rigidbody.rotation * Quaternion.Euler(0f, rotX, 0f));
+        
+        //clamp it
+
+        var rawCameraRotation = Camera.main.transform.rotation * Quaternion.Euler(rotY, 0f, 0f);    //getting the unclamped rotation
+
+        if (Quaternion.Angle(rigidbody.rotation, rawCameraRotation) > maxCameraXAngle)  {           //if the rotation x angle is too big
+            var lookAtPosition = Camera.main.transform.TransformDirection(Vector3.forward);         //we check the lookAt direction
+            if (Vector3.Dot(lookAtPosition, Vector3.up) > 0f) {                                     //if player looks up
+                Camera.main.transform.localRotation = Quaternion.AngleAxis(-90f, Vector3.right);    //we clamp it up
+            } else {
+                Camera.main.transform.localRotation = Quaternion.AngleAxis(90f, Vector3.right);     //else we clamp it down
+            }
+        } else {
+            Camera.main.transform.rotation *= Quaternion.Euler(rotY, 0f, 0f);                       //if not, we just add the rotation as usual
+        }
 
         previousMousePosition = Input.mousePosition;
-        if (Camera.main.transform.rotation.eulerAngles.x + rotY > 90f) { //fix clamp at 0 degrees
-            rotY = 90f - Camera.main.transform.rotation.eulerAngles.x;
-            print("clamp at 90");
-        }
-        /* else if (Camera.main.transform.rotation.eulerAngles.x + rotY < -90f){
-            rotY = - 90f + Camera.main.transform.rotation.eulerAngles.x;
-            print("clamp at -90");
-            } */
-        
 
-        Camera.main.transform.rotation *= Quaternion.Euler(rotY, 0f, 0f);
     }
 }
