@@ -14,13 +14,14 @@ public class PlayerMovement : MonoBehaviour
     public float maxCameraXAngle = 90f;
     public bool invertY = false;
 
+    Camera mainCam;
     Vector3 previousMousePosition;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
         Cursor.visible = false;
         mouse = Mouse.current;
-
+        mainCam = GetComponentInChildren<Camera>();
         mouse.delta.y.invert = !invertY;
     }
 
@@ -36,23 +37,23 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void CameraRotation() {
-        var mouseDelta = GetMouseInputAsAPIDelta() * mouseSensitivity * Time.deltaTime;
+        var mouseDelta = GetMouseInputAsAPIDelta() * mouseSensitivity;
 
         rigidbody.MoveRotation(rigidbody.rotation * Quaternion.Euler(0f, mouseDelta.x, 0f));
         
         //clamp it
 
-        var rawCameraRotation = Camera.main.transform.rotation * Quaternion.Euler(mouseDelta.y, 0f, 0f);    //getting the unclamped rotation
+        var rawCameraRotation = mainCam.transform.rotation * Quaternion.Euler(mouseDelta.y, 0f, 0f);    //getting the unclamped rotation
 
         if (Quaternion.Angle(rigidbody.rotation, rawCameraRotation) > maxCameraXAngle)  {           //if the rotation x angle is too big
-            var lookAtPosition = Camera.main.transform.TransformDirection(Vector3.forward);         //we check the lookAt direction
+            var lookAtPosition = mainCam.transform.TransformDirection(Vector3.forward);         //we check the lookAt direction
             if (Vector3.Dot(lookAtPosition, Vector3.up) > 0f) {                                     //if player looks up
-                Camera.main.transform.localRotation = Quaternion.AngleAxis(-90f, Vector3.right);    //we clamp it up
+                mainCam.transform.localRotation = Quaternion.AngleAxis(-90f, Vector3.right);    //we clamp it up
             } else {
-                Camera.main.transform.localRotation = Quaternion.AngleAxis(90f, Vector3.right);     //else we clamp it down
+                mainCam.transform.localRotation = Quaternion.AngleAxis(90f, Vector3.right);     //else we clamp it down
             }
         } else {
-            Camera.main.transform.rotation *= Quaternion.Euler(mouseDelta.y, 0f, 0f);               //if not, we just add the rotation as usual
+            mainCam.transform.rotation *= Quaternion.Euler(mouseDelta.y, 0f, 0f);               //if not, we just add the rotation as usual
         }
     }
 
