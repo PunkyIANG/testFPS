@@ -61,7 +61,9 @@ public class PlayerMovement : MonoBehaviour
     Vector2 GetMouseInputAsPositionDelta()
     {
         var result = new Vector2((Input.mousePosition - previousMousePosition).x, (Input.mousePosition - previousMousePosition).y * (invertY ? 1 : -1));
-        //SetCursorPos(Screen.width / 2, Screen.height / 2);
+        if (Mathf.Abs(Input.mousePosition.x - Screen.width / 2) > Screen.width / 4 || 
+            Mathf.Abs(Input.mousePosition.y - Screen.height / 2) > Screen.height / 4)   //if cursor gets far off
+            SetCursorPos(Screen.width / 2, Screen.height / 2);  //reset it
         previousMousePosition = Input.mousePosition;
         return result;
     }
