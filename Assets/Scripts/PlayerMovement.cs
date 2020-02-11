@@ -1,29 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 
 public class PlayerMovement : MonoBehaviour
 {
-    [DllImport("user32.dll")]
-    static extern bool SetCursorPos(int X, int Y);  //importing dll for setting cursor position
-
+    private Mouse mouse;
     new Rigidbody rigidbody;
     public float speed = 10f;
     public float mouseSensitivity = 10f;
     public float maxCameraXAngle = 90f;
     public bool invertY = false;
-    public MouseMovementType selectedMouseMovementType;
+
     Vector3 previousMousePosition;
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
-        //Cursor.lockState = CursorLockMode.Locked;
-        //Cursor.visible = false;
+        Cursor.visible = false;
+        mouse = Mouse.current;
 
-
+        mouse.delta.y.invert = !invertY;
     }
 
     void Update() {     //we're handling input in update for better gameplay feel
@@ -38,7 +36,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void CameraRotation() {
-        var mouseDelta = GetMouseInputAsPositionDelta() * mouseSensitivity * Time.deltaTime;
+        var mouseDelta = GetMouseInputAsAPIDelta() * mouseSensitivity * Time.deltaTime;
 
         rigidbody.MoveRotation(rigidbody.rotation * Quaternion.Euler(0f, mouseDelta.x, 0f));
         
@@ -61,10 +59,11 @@ public class PlayerMovement : MonoBehaviour
     Vector2 GetMouseInputAsPositionDelta()
     {
         var result = new Vector2((Input.mousePosition - previousMousePosition).x, (Input.mousePosition - previousMousePosition).y * (invertY ? 1 : -1));
-        if (Mathf.Abs(Input.mousePosition.x - Screen.width / 2) > Screen.width / 4 || 
-            Mathf.Abs(Input.mousePosition.y - Screen.height / 2) > Screen.height / 4)   //if cursor gets far off
-            SetCursorPos(Screen.width / 2, Screen.height / 2);  //reset it
         previousMousePosition = Input.mousePosition;
         return result;
+    }
+
+    Vector2 GetMouseInputAsAPIDelta() {
+        return mouse.delta.ReadUnprocessedValue();
     }
 }

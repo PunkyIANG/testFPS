@@ -421,10 +421,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  mouseSensitivity: 10
+  mouseSensitivity: 1
   maxCameraXAngle: 90
   invertY: 0
-  selectedMouseMovementType: 0
 --- !u!54 &100224301
 Rigidbody:
   m_ObjectHideFlags: 0
