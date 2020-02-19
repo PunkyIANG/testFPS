@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     private Mouse mouse;
     private Keyboard keyboard;
     new Rigidbody rigidbody;
+    public float groundCheckDistanceDelta = 0.1f;
     public bool useGravity = true;
     public bool useGravityOnGround = false; 
     public float gravity = 20.0f;
@@ -32,12 +33,20 @@ public class PlayerMovement : MonoBehaviour
     private bool wishJump;
     private Vector3 abstractInput;
     private Vector3 playerVelocity = Vector3.zero;
-    private Vector3 startPosition;
-
+    private Vector3 queuedMovement = Vector3.zero;
     bool rotated = false;
     Camera mainCam;
     Vector3 previousMousePosition;
     Quaternion lateRotation;
+    public GUIStyle style;
+    public float fpsDisplayRate = 4.0f; // 4 updates per sec
+    private int frameCount = 0;
+    private float dt = 0.0f;
+    private float fps = 0.0f;
+    private float playerTopVelocity = 0.0f;
+
+
+
 
     void Start() {
         rigidbody = GetComponent<Rigidbody>();
@@ -46,7 +55,7 @@ public class PlayerMovement : MonoBehaviour
         keyboard = Keyboard.current;
         mainCam = GetComponentInChildren<Camera>();
         QualitySettings.maxQueuedFrames = 0;
-        startPosition = transform.position;
+       
     }
 
     // void Update() {     //we're handling input in update for better gameplay feel
@@ -74,11 +83,29 @@ public class PlayerMovement : MonoBehaviour
         else
             AirMove();
 
-        if (playerVelocity.y != 0f)
-            print(playerVelocity.y);
+
+
+        //print(playerVelocity + " " + IsGrounded());
+
         rigidbody.MovePosition(rigidbody.position + playerVelocity * Time.deltaTime);
 
+        if(playerVelocity.magnitude > playerTopVelocity) 
+            playerTopVelocity = playerVelocity.magnitude;
+
+        GetFPS(); 
+        //QueueMovement(playerVelocity * Time.deltaTime);
     }
+
+    // void FixedUpdate() {
+    //     rigidbody.MovePosition(rigidbody.position + queuedMovement);
+    //     queuedMovement = Vector3.zero;
+    // }
+
+    private void QueueMovement(Vector3 frameMovement) {
+        queuedMovement += frameMovement;
+    }
+
+    
 
     private void AirMove() {
         Vector3 wishdir;
@@ -154,6 +181,7 @@ public class PlayerMovement : MonoBehaviour
 
 
     private void GroundMove() {
+        playerVelocity.y = 0f;
 
         // Do not apply friction if the player is queueing up the next jump
         if (!wishJump)
@@ -235,7 +263,7 @@ public class PlayerMovement : MonoBehaviour
 
     bool IsGrounded() {
         float DistanceToTheGround = GetComponent<Collider>().bounds.extents.y;
-        return Physics.Raycast(transform.position, Vector3.down, DistanceToTheGround + 0.1f);
+        return Physics.Raycast(transform.position, Vector3.down, DistanceToTheGround + groundCheckDistanceDelta);
     }
 
     void CharMovement() {
@@ -318,10 +346,27 @@ public class PlayerMovement : MonoBehaviour
         return new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
     }
 
-    public void ResetPlayer (InputAction.CallbackContext context)
+
+    private void OnGUI()
     {
-        transform.position = startPosition;
-        print("reset");
+        GUI.Label(new Rect(0, 0, 400, 100), "FPS: " + fps, style);
+        var ups = playerVelocity;
+        ups.y = 0;
+        GUI.Label(new Rect(0, 15, 400, 100), "Speed: " + Mathf.Round(ups.magnitude * 100) / 100 + "ups", style);
+        GUI.Label(new Rect(0, 30, 400, 100), "Top Speed: " + Mathf.Round(playerTopVelocity * 100) / 100 + "ups", style);
+    }
+
+    private void GetFPS() {
+        // Do FPS calculation
+        frameCount++;
+        dt += Time.deltaTime;
+        if (dt > 1.0 / fpsDisplayRate)
+        {
+            fps = Mathf.Round(frameCount / dt);
+            frameCount = 0;
+            dt -= 1.0f / fpsDisplayRate;
+        }
+
     }
 
 }
