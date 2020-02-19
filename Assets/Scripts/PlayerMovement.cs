@@ -32,7 +32,7 @@ public class PlayerMovement : MonoBehaviour
     private bool wishJump;
     private Vector3 abstractInput;
     private Vector3 playerVelocity = Vector3.zero;
-
+    private Vector3 startPosition;
 
     bool rotated = false;
     Camera mainCam;
@@ -46,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
         keyboard = Keyboard.current;
         mainCam = GetComponentInChildren<Camera>();
         QualitySettings.maxQueuedFrames = 0;
+        startPosition = transform.position;
     }
 
     // void Update() {     //we're handling input in update for better gameplay feel
@@ -73,6 +74,8 @@ public class PlayerMovement : MonoBehaviour
         else
             AirMove();
 
+        if (playerVelocity.y != 0f)
+            print(playerVelocity.y);
         rigidbody.MovePosition(rigidbody.position + playerVelocity * Time.deltaTime);
 
     }
@@ -275,9 +278,10 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        if(Input.GetButtonDown("Jump") && !wishJump)
+        if (Input.GetButtonDown("Jump") && !wishJump)
             wishJump = true;
-        if(Input.GetButtonUp("Jump"))
+        
+        if (Input.GetButtonUp("Jump"))
             wishJump = false;
     }
 
@@ -312,6 +316,12 @@ public class PlayerMovement : MonoBehaviour
 
     Vector3 TestMovement() {
         return new Vector3(Input.GetAxisRaw("Horizontal"), 0f, Input.GetAxisRaw("Vertical"));
+    }
+
+    public void ResetPlayer (InputAction.CallbackContext context)
+    {
+        transform.position = startPosition;
+        print("reset");
     }
 
 }
