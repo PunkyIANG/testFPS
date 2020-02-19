@@ -10,6 +10,7 @@ public class PlayerMovement : MonoBehaviour
     private Keyboard keyboard;
     new Rigidbody rigidbody;
     public bool useGravity = true;
+    public bool useGravityOnGround = false; 
     public float gravity = 20.0f;
     public float speed = 10f; //deprecated
     public float moveSpeed = 7.0f;                // Ground move speed
@@ -67,7 +68,7 @@ public class PlayerMovement : MonoBehaviour
         
         QueueJump();
 
-        if(IsGrounded()) 
+        if(IsGrounded())
             GroundMove();
         else
             AirMove();
@@ -170,7 +171,7 @@ public class PlayerMovement : MonoBehaviour
         Accelerate(wishDir, wishSpeed, runAcceleration);
 
         // Reset the gravity velocity
-        if (useGravity)
+        if (useGravityOnGround)
             playerVelocity.y = -gravity * Time.deltaTime;
 
         if(wishJump)
